@@ -11,6 +11,9 @@ use std::sync::{atomic::AtomicUsize, Arc};
 use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
 
+use crate::initializers::chat;
+use regex::Regex;
+
 #[allow(clippy::module_name_repetitions)]
 pub struct ChatInitializer;
 
@@ -75,10 +78,56 @@ impl Initializer for ChatInitializer {
             s.on(
                 "new message",
                 |s: SocketRef, Data::<String>(msg), Extension::<Username>(username)| {
+                    let a = msg.clone();
                     let msg = &Res::Message {
                         username,
                         message: msg,
                     };
+
+                    if a.contains("instagram.com") {
+                        let re: Regex = Regex::new("instagram.com/(?<profile>.+)$").unwrap();
+                        let caps = re.captures(a.as_str()).unwrap();
+                        let profile = &caps["profile"];
+
+                        let u: Username = chat::Username(String::from("instagram download"));
+                        let m: String = String::from("Begin Instagram profile download...");
+                        let cmdmsg = &Res::Message {
+                            username: u,
+                            message: m,
+                        };
+                        s.broadcast().emit("new message", cmdmsg).ok();
+
+                        let homedir = match dirs::home_dir() {
+                            Some(d) => d.display().to_string(),
+                            None => "/home/yonas".into(),
+                        };
+                        let output = std::process::Command::new(homedir + "/bin/instagram-profile-download")
+                            .arg("--no-metadata-json")
+                            .arg("--no-compress-json")
+                            .arg("--no-captions")
+                            .arg("--no-video-thumbnails")
+                            .arg("--load-cookies=\"firefox\"")
+                            .arg(profile)
+                            .output()
+                            .expect("failed to execute process");
+
+                        println!("status: {}", output.status);
+                        println!("stdout: {}", String::from_utf8_lossy(&output.stdout));
+                        println!("stderr: {}", String::from_utf8_lossy(&output.stderr));
+
+                        let u2: Username = chat::Username(String::from("instagram download"));
+                        let m2: String = match output.status.success() {
+                            true => String::from("Download complete"),
+                            false => (String::from_utf8_lossy(&output.stdout) + String::from_utf8_lossy(&output.stderr)).to_string(),
+                        };
+
+                        let cmdmsg2 = &Res::Message {
+                            username: u2,
+                            message: m2,
+                        };
+                        s.broadcast().emit("new message", cmdmsg2).ok();
+                    }
+
                     s.broadcast().emit("new message", msg).ok();
                 },
             );

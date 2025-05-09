@@ -42,6 +42,8 @@ unic-langid = "0.9.4"
 socketioxide = { version = "0.15.1", features = ["extensions", "state"] }
 tower = { version = "*" }
 tower-http = { version = "0.6.2", features = ["cors", "fs"] }
+regex = "1.11.1"
+dirs = "6.0.0"
 
 [[bin]]
 name = "chat_rooms-cli"
