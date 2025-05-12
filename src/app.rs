@@ -15,6 +15,7 @@ use std::path::Path;
 
 use crate::{
     controllers, initializers, models::_entities::users, tasks, workers::downloader::DownloadWorker,
+    workers::instagram::InstagramWorker,
 };
 
 pub struct App;
@@ -40,6 +41,10 @@ impl Hooks for App {
 
     async fn initializers(_ctx: &AppContext) -> Result<Vec<Box<dyn Initializer>>> {
         Ok(vec![
+            #[cfg(not(test))]
+            {
+                Box::new(initializers::prometheus::PrometheusInitializer)
+            },
             Box::new(initializers::view_engine::ViewEngineInitializer),
             Box::new(initializers::chat::ChatInitializer),
         ])
@@ -48,9 +53,11 @@ impl Hooks for App {
     fn routes(_ctx: &AppContext) -> AppRoutes {
         AppRoutes::with_default_routes() // controller routes below
             .add_route(controllers::auth::routes())
+            .add_route(controllers::instagram::routes())
     }
     async fn connect_workers(ctx: &AppContext, queue: &Queue) -> Result<()> {
         queue.register(DownloadWorker::build(ctx)).await?;
+        queue.register(InstagramWorker::build(ctx)).await?;
         Ok(())
     }
     fn register_tasks(tasks: &mut Tasks) {
