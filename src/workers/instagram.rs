@@ -17,16 +17,7 @@ impl BackgroundWorker<InstagramWorkerArgs> for InstagramWorker {
         Self { ctx: ctx.clone() }
     }
     async fn perform(&self, args: InstagramWorkerArgs) -> Result<()> {
-        // TODO: Some actual work goes here...
-        tracing::info!("Instagram worker :: got profile {}", args.profile);
-
-        //let u: Username = chat::Username(String::from("instagram download"));
-        //let m: String = String::from("Begin Instagram profile download...");
-        //let msg = &Res::Message {
-        //    username: u,
-        //    message: m,
-        //};
-        //self.ctx.s.broadcast().emit("new message", msg).ok();
+        tracing::info!(profile = args.profile, "Instagram worker begin");
 
         let homedir = match dirs::home_dir() {
             Some(d) => d.display().to_string(),
@@ -45,18 +36,7 @@ impl BackgroundWorker<InstagramWorkerArgs> for InstagramWorker {
         tracing::debug!("status: {}", output.status);
         tracing::debug!("stdout: {}", String::from_utf8_lossy(&output.stdout));
         tracing::debug!("stderr: {}", String::from_utf8_lossy(&output.stderr));
-
-        //let u2: Username = chat::Username(String::from("instagram download"));
-        //let m2: String = match output.status.success() {
-        //    true => String::from("Download complete"),
-        //    false => (String::from_utf8_lossy(&output.stdout) + String::from_utf8_lossy(&output.stderr)).to_string(),
-        //};
-
-        //let output_msg = &Res::Message {
-        //    username: u2,
-        //    message: m2,
-        //};
-        //self.ctx.s.broadcast().emit("new message", output_msg).ok();
+        tracing::info!(profile = args.profile, "Instagram worker end");
 
         Ok(())
     }

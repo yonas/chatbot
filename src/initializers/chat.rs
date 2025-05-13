@@ -92,12 +92,14 @@ impl Initializer for ChatInitializer {
                         let parsed = url::Url::parse(&a).expect("instagram profile URL is not valid");
                         let profile = parsed.path().to_string();
 
+                        tracing::debug!(profile = profile, "Calling Instagram worker");
+
                         let _ = InstagramWorker::perform_later(
                             &c,
                             InstagramWorkerArgs {
                                 profile: profile,
                             },
-                        );
+                        ).await;
                     }
                 },
             );
