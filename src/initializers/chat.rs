@@ -91,21 +91,16 @@ impl Initializer for ChatInitializer {
                     if a.contains("instagram.com") {
                         let url = url::Url::parse(&a).expect("Instagram profile URL is not valid");
                         let path_segments = url.path_segments().ok_or_else(|| "cannot be base");
-                        let profile = if let Some(path) = path_segments.expect("Path should contain a profile").next() {
-                            String::from(path)
-                        } else {
-                            String::new()
-                        };
+                        let profile = String::from(path_segments.expect("Path should contain a profile").next().unwrap());
 
-                        if !profile.is_empty() {
-                            tracing::info!(profile = profile, "Calling Instagram worker");
-                            let _ = InstagramWorker::perform_later(
-                                &c,
-                                InstagramWorkerArgs {
-                                    profile: profile,
-                                },
-                            ).await;
-                        }
+                        tracing::info!(profile = profile, "Calling Instagram worker");
+
+                        let _ = InstagramWorker::perform_later(
+                            &c,
+                            InstagramWorkerArgs {
+                                profile: profile,
+                            },
+                        ).await;
                     }
                 },
             );
